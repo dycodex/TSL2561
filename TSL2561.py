@@ -3,7 +3,7 @@
 import quick2wire.i2c as i2c
 import time
 
-class TSL2561: 
+class TSL2561:
     VISIBLE                   = 2       # channel 0 - channel 1
     INFRARED                  = 1       # channel 1
     FULLSPECTRUM              = 0       # channel 0
@@ -100,7 +100,7 @@ class TSL2561:
     INTEGRATIONTIME_13MS      = 0x00    # 13.7ms
     INTEGRATIONTIME_101MS     = 0x01    # 101ms
     INTEGRATIONTIME_402MS     = 0x02    # 402ms
-    
+
     GAIN_0X                   = 0x00    # No gain
     GAIN_16X                  = 0x10    # 16x gain
 
@@ -109,44 +109,44 @@ class TSL2561:
     package = PACKAGE_T_FN_CL
     timing = INTEGRATIONTIME_13MS
     gain = GAIN_0X
-    
+
     def __init__(self, address, bus=0):
         self.address = address
-        self.i2cbus = bus  
+        self.i2cbus = bus
     def __init__(self, bus=0):
         self.address = 0x39
         self.i2cbus = bus
     def foundSensor(self):
-        with i2c.I2CMaster(self.i2cbus) as bus:    
+        with i2c.I2CMaster(self.i2cbus) as bus:
             read_results = bus.transaction(
                 i2c.writing_bytes(self.address, self.REGISTER_ID),
                 i2c.reading(self.address, 1)
             )
-        
-            state = read_results[0][0]    
+
+            state = read_results[0][0]
             print("%02x" % state)
             if state == 0x0A:
                 return True
         return False
     def setGain(self, gain):
         self.gain = gain
-        with i2c.I2CMaster(self.i2cbus) as bus:    
+        with i2c.I2CMaster(self.i2cbus) as bus:
             bus.transaction(
                 i2c.writing_bytes(self.address, self.COMMAND_BIT | self.REGISTER_TIMING, self.gain | self.timing )
-            )    
+            )
     def setTiming(self, timing):
-        self.timing = timing    
-        with i2c.I2CMaster(self.i2cbus) as bus:    
+        self.timing = timing
+        with i2c.I2CMaster(self.i2cbus) as bus:
             bus.transaction(
                 i2c.writing_bytes(self.address, self.COMMAND_BIT | self.REGISTER_TIMING, self.gain | self.timing )
-            )  
+            )
     def enable(self):
-        with i2c.I2CMaster(self.i2cbus) as bus:    
+        with i2c.I2CMaster(self.i2cbus) as bus:
             bus.transaction(
                i2c.writing_bytes(self.address, self.COMMAND_BIT | self.REGISTER_CONTROL, self.CONTROL_POWERON )
             )
     def disable(self):
-        with i2c.I2CMaster(self.i2cbus) as bus:    
+        with i2c.I2CMaster(self.i2cbus) as bus:
             bus.transaction(
                i2c.writing_bytes(self.address, self.COMMAND_BIT | self.REGISTER_CONTROL, self.CONTROL_POWEROFF )
             )
@@ -156,27 +156,27 @@ class TSL2561:
         if self.timing == self.INTEGRATIONTIME_101MS:
             time.sleep(0.102)
         if self.timing == self.INTEGRATIONTIME_402MS:
-            time.sleep(0.403)        
+            time.sleep(0.403)
     def getFullLuminosity(self):
         self.enable()
         self.wait()
-        
-        with i2c.I2CMaster(self.i2cbus) as bus:    
+
+        with i2c.I2CMaster(self.i2cbus) as bus:
             read_results = bus.transaction(
-                i2c.writing_bytes(address, self.COMMAND_BIT | self.WORD_BIT | self.REGISTER_CHAN1_LOW ),
-                i2c.reading(address, 2),
-                i2c.writing_bytes(address, self.COMMAND_BIT | self.WORD_BIT | self.REGISTER_CHAN0_LOW ),
-                i2c.reading(address, 2)        
+                i2c.writing_bytes(self.address, self.COMMAND_BIT | self.WORD_BIT | self.REGISTER_CHAN1_LOW ),
+                i2c.reading(self.address, 2),
+                i2c.writing_bytes(self.address, self.COMMAND_BIT | self.WORD_BIT | self.REGISTER_CHAN0_LOW ),
+                i2c.reading(self.address, 2)
             )
-       
-        self.disable()  
+
+        self.disable()
 
         full = read_results[0][1]
 #        print("---- full: %#08x" % full)
         full = full << 8
         full += read_results[0][0]
 #        print("---- full: %#08x" % full)
-        full = full << 8    
+        full = full << 8
         full += read_results[1][1]
 #        print("---- full: %#08x" % full)
         full = full << 8
@@ -210,7 +210,7 @@ class TSL2561:
              chScale = self.LUX_CHSCALE_TINT0
         if self.timing == self.INTEGRATIONTIME_101MS:
              chScale = self.LUX_CHSCALE_TINT1
-             
+
         # Scale for gain (1x or 16x)
         chScale = chScale * self.gain
 
@@ -225,9 +225,9 @@ class TSL2561:
 
         # round the ratio value
         ratio = (ratio + 1) >> 1
-        
+
         if self.package == self.PACKAGE_T_FN_CL:
-            if (ratio >= 0) and (ratio <= self.LUX_K1T):  
+            if (ratio >= 0) and (ratio <= self.LUX_K1T):
                 b = self.LUX_B1T
                 m = self.LUX_M1T
             elif ratio <= self.LUX_K2T:
@@ -251,9 +251,9 @@ class TSL2561:
             elif ratio <= self.LUX_K8T:
                 b = self.LUX_B8T
                 m = self.LUX_M8T
-        else:    
+        else:
             # PACKAGE_CS otherwise
-            if (ratio >= 0) and (ratio <= self.LUX_K1C):  
+            if (ratio >= 0) and (ratio <= self.LUX_K1C):
                 b = self.LUX_B1C
                 m = self.LUX_M1C
             elif ratio <= self.LUX_K2C:
@@ -291,54 +291,55 @@ class TSL2561:
          # Signal I2C had no errors
         return lux
 
-address = 0x39
-xad = 0x0A
+if __name__ == "__main__":
+    address = 0x39
+    xad = 0x0A
 
-iodir_register = 0x00
-gpio_register = 0x09
+    iodir_register = 0x00
+    gpio_register = 0x09
 
-with i2c.I2CMaster(0) as bus:    
-    read_results = bus.transaction(
-        i2c.writing_bytes(address, xad),
-        i2c.reading(address, 1)
-    )
-        
-    state = read_results[0][0]    
-    print("%02x" % state)
-    
-    # set timing and gain 101ms & 16x gain
-    bus.transaction(
-        i2c.writing_bytes(address, 0x80 | 0x01, 0x01 | 0x10 )
-    )    
-    # enable
-    bus.transaction(
-        i2c.writing_bytes(address, 0x80, 0x03 )
-    )
-    # wait
-    time.sleep(0.102)
-    # full luminosity
-    read_results = bus.transaction(
-        i2c.writing_bytes(address, 0x80 | 0x20 | 0x0E ),
-        i2c.reading(address, 2),
-        i2c.writing_bytes(address, 0x80 | 0x20 | 0x0C ),
-        i2c.reading(address, 2)        
-    )
-    # disable
-    bus.transaction(
-        i2c.writing_bytes(address, 0x80, 0x00 )
-    )
-        
-    print("%02x %02x" % (read_results[0][0], read_results[0][1]))
-    print("%02x %02x" % (read_results[1][0], read_results[1][1]))
+    with i2c.I2CMaster(0) as bus:
+        read_results = bus.transaction(
+            i2c.writing_bytes(address, xad),
+            i2c.reading(address, 1)
+        )
 
-    full = read_results[1][1]
-    full = full << 8
-    full += read_results[1][0]
-    
-    infra = read_results[0][1]
-    infra = infra << 8
-    infra += read_results[0][0]
+        state = read_results[0][0]
+        print("%02x" % state)
 
-    print("Full:     %04x" % full)
-    print("Infrared: %04x" % infra)
-    print("Visible:  %04x" % (full - infra) )
+        # set timing and gain 101ms & 16x gain
+        bus.transaction(
+            i2c.writing_bytes(address, 0x80 | 0x01, 0x01 | 0x10 )
+        )
+        # enable
+        bus.transaction(
+            i2c.writing_bytes(address, 0x80, 0x03 )
+        )
+        # wait
+        time.sleep(0.102)
+        # full luminosity
+        read_results = bus.transaction(
+            i2c.writing_bytes(address, 0x80 | 0x20 | 0x0E ),
+            i2c.reading(address, 2),
+            i2c.writing_bytes(address, 0x80 | 0x20 | 0x0C ),
+            i2c.reading(address, 2)
+        )
+        # disable
+        bus.transaction(
+            i2c.writing_bytes(address, 0x80, 0x00 )
+        )
+
+        print("%02x %02x" % (read_results[0][0], read_results[0][1]))
+        print("%02x %02x" % (read_results[1][0], read_results[1][1]))
+
+        full = read_results[1][1]
+        full = full << 8
+        full += read_results[1][0]
+
+        infra = read_results[0][1]
+        infra = infra << 8
+        infra += read_results[0][0]
+
+        print("Full:     %04x" % full)
+        print("Infrared: %04x" % infra)
+        print("Visible:  %04x" % (full - infra) )

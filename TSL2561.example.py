@@ -2,18 +2,21 @@
 
 from TSL2561 import *
 
-tsl = TSL2561() 
- 
-if tsl.foundSensor(): 
+address = 0x29
+bus = 1
+
+tsl = TSL2561(address, bus)
+
+if tsl.foundSensor():
     print("Found sensor...")
-    
-    tsl.setGain(tsl.GAIN_16X);  
+
+    tsl.setGain(tsl.GAIN_16X);
     tsl.setTiming(tsl.INTEGRATIONTIME_13MS)
 
-    x = tsl.getFullLuminosity()     
+    x = tsl.getFullLuminosity()
     print("Full luminosity value: %d" % x)
     print("Full luminosity value: %#08x" % x)
-	
+
     full = tsl.getLuminosity(tsl.FULLSPECTRUM)
     visible = tsl.getLuminosity(tsl.VISIBLE)
     infrared = tsl.getLuminosity(tsl.INFRARED)
